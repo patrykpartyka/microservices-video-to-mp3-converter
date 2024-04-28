@@ -62,21 +62,18 @@ def validate():
 
     if not encoded_jwt:
         return "missing credentials", 401
-    
+
     encoded_jwt = encoded_jwt.split(" ")[1]
 
     try:
         decoded = jwt.decode(
-            jwt=encoded_jwt,
-            key=server.config["JWT_SECRET"],
-            algorithms=["HS256"]
+            jwt=encoded_jwt, key=server.config["JWT_SECRET"], algorithms=["HS256"]
         )
     except:
         return "non authorized", 403
-    
+
     return "decoded", 200
 
 
 if __name__ == "__main__":
-    print(__name__)
     server.run(host="0.0.0.0", port=5000, debug=True)
