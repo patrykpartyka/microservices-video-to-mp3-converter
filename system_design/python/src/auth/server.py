@@ -31,7 +31,7 @@ def createJWT(username: str, secret: str, is_admin: bool) -> str:
     )
 
 
-@server.route("/login", method=["POST"])
+@server.route("/login", methods=["POST"])
 def login():
     auth = request.authorization
     if not auth:
@@ -56,7 +56,7 @@ def login():
         return "invalid credentials", 401
 
 
-@server.route("/validate", method=["POST"])
+@server.route("/validate", methods=["POST"])
 def validate():
     encoded_jwt = request.headers["Authorization"]
 
