@@ -1,14 +1,19 @@
-import jwt, datetime, os
-from flask import Flask, request
+import datetime
+import jwt
+import os
+from flask import (
+    Flask,
+    request,
+)
 from flask_mysqldb import MySQL
 
 
 class Config:
     MYSQL_HOST = os.environ.get("MYSQL_HOST")
     MYSQL_USER = os.environ.get("MYSQL_USER")
-    MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD")
     MYSQL_DB = os.environ.get("MYSQL_DB")
     MYSQL_PORT = os.environ.get("MYSQL_PORT")
+    MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD")
     JWT_SECRET = os.environ.get("JWT_SECRET")
 
 
@@ -22,7 +27,7 @@ def createJWT(username: str, secret: str, is_admin: bool) -> str:
         payload={
             "username": username,
             "exp": datetime.datetime.now(tz=datetime.timezone.utc)
-            + datetime.timedelta(days=1),
+                   + datetime.timedelta(days=1),
             "iat": datetime.datetime.now(tz=datetime.timezone.utc),
             "admin": is_admin,
         },
@@ -72,7 +77,7 @@ def validate():
     except:
         return "non authorized", 403
 
-    return "decoded", 200
+    return "authorized", 200
 
 
 if __name__ == "__main__":

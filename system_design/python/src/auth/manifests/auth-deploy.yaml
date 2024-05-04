@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: auth
-          image: patrykp4888/auth:latest
+          image: patrykp4888/authorization-service:v1
           ports:
             - containerPort: 5000
           envFrom:
