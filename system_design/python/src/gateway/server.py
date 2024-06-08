@@ -1,12 +1,7 @@
-import http
-import gridfs
-import pika
-import json
-from flask import (
-    Flask,
-    request,
-)
+import http, gridfs, pika, json
+from flask import Flask, request, send_file
 from flask_pymongo import PyMongo
+from bson.objectid import ObjectId
 
 from auth import validate
 from auth_svc import access
@@ -14,10 +9,12 @@ from storage import util
 
 
 server = Flask(__name__)
-server.config["MONGO_URI"] = "mongodb://host.minikube.internal:27017/videos"
 
-mongo = PyMongo(server)
-fs = gridfs.GridFS(mongo.db)
+mongo_video = PyMongo(server, uri="mongodb://host.minikube.internal:27017/videos")
+mongo_mp3 = PyMongo(server, uri="mongodb://host.minikube.internal:27017/mp3s")
+
+fs_videos = gridfs.GridFS(mongo_video.db)
+fs_mp3s = gridfs.GridFS(mongo_mp3.db)
 
 connection = pika.BlockingConnection(pika.ConnectionParameters("rabbitmq"))
 channel = connection.channel()
@@ -37,14 +34,17 @@ def login():
 def upload():
     access, err = validate.token(request)
 
+    if err:
+        return err
+
     access = json.loads(access)
 
     if access["admin"]:
-        if len(request.files) != 1:
+        if len(request.files) > 1 or len(request.files) < 1:
             return "exactly 1 file required", http.HTTPStatus.BAD_REQUEST
 
         for _, f in request.files.items():
-            err = util.payload(f, fs, channel, access)
+            err = util.upload(f, fs_videos, channel, access)
 
             if err:
                 return err
@@ -57,7 +57,27 @@ def upload():
 
 @server.route("/download", methods=["GET"])
 def download():
-    pass
+    access, err = validate.token(request)
+
+    if err:
+        return err
+
+    access = json.loads(access)
+
+    if access["admin"]:
+        fid_string = request.args.get("fid")
+
+        if not fid_string:
+            return "fid is required", http.HTTPStatus.BAD_REQUEST
+
+        try:
+            out = fs_mp3s.get(ObjectId(fid_string))
+            return send_file(out, download_name=f"{fid_string}.mp3")
+        except Exception as err:
+            print(err)
+            return "internal server error", http.HTTPStatus.INTERNAL_SERVER_ERROR
+
+    return "not authorized", http.HTTPStatus.UNAUTHORIZED
 
 
 if __name__ == "__main__":

@@ -27,7 +27,7 @@ def createJWT(username: str, secret: str, is_admin: bool) -> str:
         payload={
             "username": username,
             "exp": datetime.datetime.now(tz=datetime.timezone.utc)
-                   + datetime.timedelta(days=1),
+            + datetime.timedelta(days=1),
             "iat": datetime.datetime.now(tz=datetime.timezone.utc),
             "admin": is_admin,
         },

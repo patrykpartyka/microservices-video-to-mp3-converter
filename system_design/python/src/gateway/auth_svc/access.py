@@ -1,6 +1,5 @@
-import http
-import os
-import requests
+import http, os, requests
+
 
 AUTH_SVC_ADDRESS = os.environ.get("AUTH_SVC_ADDRESS")
 
@@ -8,7 +7,7 @@ AUTH_SVC_ADDRESS = os.environ.get("AUTH_SVC_ADDRESS")
 def login(request):
     auth = request.authorization
     if not auth:
-        return None, ("missing credentials", 401)
+        return None, ("missing credentials", http.HTTPStatus.UNAUTHORIZED)
 
     basicAuth = (auth.username, auth.password)
 
