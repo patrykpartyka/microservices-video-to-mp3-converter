@@ -1,6 +1,4 @@
-import datetime
-import jwt
-import os
+import datetime, jwt, os, http
 from flask import (
     Flask,
     request,
@@ -40,7 +38,7 @@ def createJWT(username: str, secret: str, is_admin: bool) -> str:
 def login():
     auth = request.authorization
     if not auth:
-        return "missing credentials", 401
+        return "missing credentials", http.HTTPStatus.UNAUTHORIZED
 
     cursor = mysql.connection.cursor()
     result = cursor.execute(
@@ -53,12 +51,12 @@ def login():
         password = user_row[1]
 
         if auth.username != email or auth.password != password:
-            return "invalid_credentials", 401
+            return "invalid_credentials", http.HTTPStatus.UNAUTHORIZED
         else:
-            return jwt.createJWT(auth.username, server.config["JWT_SECRET"], True)
+            return createJWT(auth.username, os.environ.get("JWT_SECRET"), True)
 
     else:
-        return "invalid credentials", 401
+        return "invalid credentials", http.HTTPStatus.UNAUTHORIZED
 
 
 @server.route("/validate", methods=["POST"])
@@ -66,19 +64,19 @@ def validate():
     encoded_jwt = request.headers["Authorization"]
 
     if not encoded_jwt:
-        return "missing credentials", 401
+        return "missing credentials", http.HTTPStatus.UNAUTHORIZED
 
     encoded_jwt = encoded_jwt.split(" ")[1]
 
     try:
         decoded = jwt.decode(
-            jwt=encoded_jwt, key=server.config["JWT_SECRET"], algorithms=["HS256"]
+            encoded_jwt, os.environ.get("JWT_SECRET"), algorithms=["HS256"]
         )
     except:
-        return "non authorized", 403
+        return "not authorized", http.HTTPStatus.FORBIDDEN
 
-    return "authorized", 200
+    return decoded, http.HTTPStatus.OK
 
 
 if __name__ == "__main__":
-    server.run(host="0.0.0.0", port=5000, debug=True)
+    server.run(host="0.0.0.0", port=5000)
