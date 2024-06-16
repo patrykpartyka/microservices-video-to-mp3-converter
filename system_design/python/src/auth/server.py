@@ -6,18 +6,14 @@ from flask import (
 from flask_mysqldb import MySQL
 
 
-class Config:
-    MYSQL_HOST = os.environ.get("MYSQL_HOST")
-    MYSQL_USER = os.environ.get("MYSQL_USER")
-    MYSQL_DB = os.environ.get("MYSQL_DB")
-    MYSQL_PORT = os.environ.get("MYSQL_PORT")
-    MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD")
-    JWT_SECRET = os.environ.get("JWT_SECRET")
-
-
 server = Flask(__name__)
-server.config.from_object(Config)
 mysql = MySQL(server)
+
+server.config["MYSQL_HOST"] = os.environ.get("MYSQL_HOST")
+server.config["MYSQL_USER"] = os.environ.get("MYSQL_USER")
+server.config["MYSQL_PASSWORD"] = os.environ.get("MYSQL_PASSWORD")
+server.config["MYSQL_DB"] = os.environ.get("MYSQL_DB")
+server.config["MYSQL_PORT"] = int(os.environ.get("MYSQL_PORT"))
 
 
 def createJWT(username: str, secret: str, is_admin: bool) -> str:
